@@ -9,6 +9,7 @@ pipeline {
         image = "harbor.registry.local/java_app/taskmanager"
         HARBOR_URL = 'https://harbor.registry.local'
         ANSIBLE_HOST = '192.168.56.210'
+        NEXUS_URL = '192.168.56.6:8081'
     }
 
     stages {
@@ -25,6 +26,27 @@ pipeline {
                     echo "Archiving the Artifacts...."
                     archiveArtifacts artifacts: '**/*.war'
                 }
+            }
+        }
+        
+        stage('Upload Artifact to Nexus') {
+            steps {
+                echo "Uploading artifact to Nexus repository"
+                nexusArtifactUploader(
+                    nexusVersion: 'nexus3',
+                    protocol: 'http',
+                    nexusUrl: "${NEXUS_URL}",
+                    groupId: 'QA',
+                    version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+                    repository: 'Javaapp_TM',
+                    credentialsId: 'nexus-credentials',
+                    artifacts: [
+                        [artifactId: 'taskmanager-webapp',
+                         classifier: '',
+                         file: 'target/taskmanager-webapp.war',
+                         type: 'war']
+                    ]
+                )
             }
         }
         
