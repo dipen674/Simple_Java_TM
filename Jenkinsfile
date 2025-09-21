@@ -80,19 +80,21 @@ pipeline {
                 }
             }
         }
-        stage('Sonar Analysis') {
-            agent {label "production"}
+            stage('Sonar Analysis') {
+            agent { label "production" }
             steps {
-                withSonarQubeEnv('sonar') { // 'sonar' is the name of the SonarQube server instance in Jenkins
-                    sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=taskmanager-webapp \
-                        -Dsonar.projectName=taskmanager-webapp \                          #pom.xml filename
-                        -Dsonar.projectVersion=4.0 \                                      #Project version is 4.0 now running.
-                        -Dsonar.sources=. \ #path of source code
+                withSonarQubeEnv('sonar') {
+                    sh '''${scannerHome}/bin/sonar-scanner \
+                        -Dsonar.projectKey=taskmanager-webapp \
+                        -Dsonar.projectName=taskmanager-webapp \
+                        -Dsonar.projectVersion=4.0 \
+                        -Dsonar.sources=. \
                         -Dsonar.junit.reportsPath=target/surefire-reports/ \
                         -Dsonar.jacoco.reportsPath=target/jacoco.exec \
                         -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
                 }
             }
         }
+
     }
 }
