@@ -1,19 +1,6 @@
 ---
-- name: Clean up old Docker images (keep last 3 versions)
-  shell: |
-    # Get current build number from environment
-    CURRENT_BUILD={{ build_number }}
-    
-    # Remove images older than 2 versions back
-    docker images --format "{{.Repository}}:{{.Tag}}" harbor.registry.local/java_app/taskmanager | \
-    grep "V_" | \
-    while read image; do
-      version=$(echo $image | sed 's/.*V_//')
-      if [ $version -lt $(($CURRENT_BUILD-2)) ]; then
-        docker rmi $image || true
-      fi
-    done
+- name: Prune all unused Docker images
+  command: docker image prune -a --force
   args:
-    executable: /bin/bash
+    warn: false  # Suppress warning about using 'command' module
   ignore_errors: yes
-  changed_when: false
