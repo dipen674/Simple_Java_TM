@@ -131,4 +131,65 @@ pipeline {
             }
         }
     }
+post {
+        always {
+            node('production') {
+                script {
+                sh "docker system prune -a -f || true"
+                
+         
+                sh """
+                    docker pull ${image}:V_${BUILD_NUMBER} || true
+                """
+                
+                sh """
+                    PREVIOUS=\$(( ${BUILD_NUMBER} - 1 ))
+                    docker pull ${image}:V_${PREVIOUS} || true
+                """
+                echo "Cleanup completed on production node and also images pulled"
+                }
+            }
+        }
+
+        success {
+            node('master') {
+                mail(
+                    bcc: 'dipakbhatt363@gmail.com',
+                    to: 'bhattadeependra05@gmail.com',
+                    cc: 'bhattad625@gmail.com',
+                    from: 'bhattad625@gmail.com',
+                    replyTo: '',
+                    subject: 'BUILD SUCCESS NOTIFICATION',
+                    body: """Hi Team,
+
+                        Build #$BUILD_NUMBER is successful. Please review the build details at:
+                        $BUILD_URL
+
+                        Regards,  
+                        DevOps Team"""
+                )
+            }
+        }
+
+        failure {
+            node('master') {
+                mail(
+                    to: 'bhattadeependra05@gmail.com',
+                    cc: 'dipakbhatt363@gmail.com',
+                    bcc: '',
+                    from: 'bhattad625@gmail.com',
+                    replyTo: 'bhattadeependra05@gmail.com',
+                    subject: 'BUILD FAILED NOTIFICATION',
+                    body: """Hi Team,
+
+                        Build #$BUILD_NUMBER is unsuccessful.  
+                        Please go through the following URL and verify the details:  
+                        $BUILD_URL
+
+                        Best Regards,  
+                        DevOps Team"""
+                )
+            }
+        }
+    }
 }
