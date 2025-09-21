@@ -43,7 +43,8 @@ pipeline {
                         -Dsonar.java.libraries=**/*.jar \
                         -Dsonar.junit.reportsPath=target/surefire-reports \
                         -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-                        -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml"""
+                        -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml \
+                        -Dsonar.scm.provider=git"""
                 }
             }
         }
