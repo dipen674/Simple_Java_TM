@@ -1,17 +1,20 @@
 pipeline {
-    agent any
+    agent none
 
     triggers {
         // Trigger on push to 'jenkins' branch
         githubPush()
     }
 
-    environment {
+   
+
+    stages {
+
+        environment {
         image = "harbor.registry.local/java_app/taskmanager"
         scannerHome = tool 'sonar7.2'
     }
 
-    stages {
         stage('Compile the code') {
             agent {label "production"}
             steps {
