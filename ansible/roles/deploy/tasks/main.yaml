@@ -16,6 +16,6 @@
   debug:
     msg: "Build number is {{ build_number }}"
 
-# - name: Clean up old images
-#   import_tasks: 04_cleanup.yaml
-#   tags: cleanup
+- name: Clean up old images
+  import_tasks: 04_cleanup.yaml
+  tags: cleanup
