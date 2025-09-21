@@ -1,19 +1,19 @@
 ---
-- name: Get information about harbor.registry.local/java_app/taskmanager images
-  community.docker.docker_image_info:
-    name: "harbor.registry.local/java_app/taskmanager"
-  register: harbor_images
-  failed_when: false
-
-- name: Debug harbor image info
-  ansible.builtin.debug:
-    var: harbor_images.images
-  when: harbor_images.images is defined
-
-- name: Remove all harbor.registry.local/java_app/taskmanager images
-  community.docker.docker_image:
-    name: "harbor.registry.local/java_app/taskmanager"
-    state: absent
-    force: yes
-  when: harbor_images.images is defined and harbor_images.images | length > 0
-  ignore_errors: no
+- name: Clean up old Docker images (keep last 3 versions)
+  shell: |
+    # Get current build number from environment
+    CURRENT_BUILD={{ build_number }}
+    
+    # Remove images older than 2 versions back
+    docker images --format "{{.Repository}}:{{.Tag}}" harbor.registry.local/java_app/taskmanager | \
+    grep "V_" | \
+    while read image; do
+      version=$(echo $image | sed 's/.*V_//')
+      if [ $version -lt $(($CURRENT_BUILD-2)) ]; then
+        docker rmi $image || true
+      fi
+    done
+  args:
+    executable: /bin/bash
+  ignore_errors: yes
+  changed_when: false

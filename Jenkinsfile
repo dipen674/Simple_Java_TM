@@ -132,24 +132,23 @@ pipeline {
         }
     }
 post {
-        always {
-            node('production') {
-                script {
+         always {
+        node('production') {
+            script {
+                // Clean up unused Docker resources
                 sh "docker system prune -a -f || true"
                 
-         
-                sh """
-                    docker pull ${image}:V_${BUILD_NUMBER} || true
-                """
+                // Pull current image
+                sh "docker pull ${image}:V_${BUILD_NUMBER} || true"
                 
-                sh """
-                    PREVIOUS=\$(( ${BUILD_NUMBER} - 1 ))
-                    docker pull ${image}:V_${PREVIOUS} || true
-                """
-                echo "Cleanup completed on production node and also images pulled"
-                }
+                // Calculate previous build number and pull that image
+                def previousBuildNumber = BUILD_NUMBER.toInteger() - 1
+                sh "docker pull ${image}:V_${previousBuildNumber} || true"
+                
+                echo "Cleanup completed on production node and images pulled"
             }
         }
+    }
 
         success {
             node('master') {
