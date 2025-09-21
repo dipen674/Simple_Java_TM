@@ -1,19 +1,18 @@
 pipeline {
-    agent none
+    agent { label 'production' }
 
     triggers {
-        // Trigger on push to 'jenkins' branch
         githubPush()
     }
 
     environment {
         image = "harbor.registry.local/java_app/taskmanager"
         HARBOR_URL = 'https://harbor.registry.local'
+        ANSIBLE_HOST = '192.168.56.210'
     }
 
     stages {
         stage('Compile the code') {
-            agent { label "production" }
             environment {
                 scannerHome = tool 'sonar7.2'
             }
@@ -30,13 +29,11 @@ pipeline {
         }
         
         stage('Sonar Analysis') {
-            agent { label "production" }
             environment {
                 scannerHome = tool 'sonar7.2'
             }
             steps {
                 withSonarQubeEnv('sonar') {
-                    withSonarQubeEnv('sonar') {
                     sh """${scannerHome}/bin/sonar-scanner \
                         -Dsonar.projectKey=taskmanager-webapp \
                         -Dsonar.projectName=taskmanager-webapp \
@@ -45,7 +42,6 @@ pipeline {
                         -Dsonar.java.binaries=target/classes \
                         -Dsonar.java.libraries=**/*.jar \
                         -Dsonar.junit.reportsPath=target/surefire-reports \
-                        -Dsonar.jacoco.reportsPath=target/jacoco.exec \
                         -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
                         -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml"""
                 }
@@ -53,7 +49,6 @@ pipeline {
         }
         
         stage('Build docker image') {
-            agent { label "production" }
             steps {
                 echo "Building docker image"
                 sh 'docker image build -t ${image}:V_${BUILD_NUMBER} .'
@@ -61,42 +56,33 @@ pipeline {
         }
         
         stage('Image scanning with Trivy') {
-            agent { label "production" }
             steps {
                 echo "Scanning image for vulnerabilities"
                 script {
-                    // Create reports directory
                     sh 'mkdir -p trivy-reports'
-                    
-                    // Run Trivy scan and save report to file
                     def trivyExitCode = sh(
                         script: "trivy image --exit-code 1 --severity CRITICAL --output trivy-reports/trivy-report-${BUILD_NUMBER}.txt ${image}:V_${BUILD_NUMBER}",
                         returnStatus: true
                     )
-                    
                     if (trivyExitCode == 1) {
-                        error "Critical vulnerabilities found! Build failed. Check the Trivy report at trivy-reports/trivy-report-${BUILD_NUMBER}.txt"
+                        error "Critical vulnerabilities found! Check trivy-reports/trivy-report-${BUILD_NUMBER}.txt"
                     } else {
-                        sh "trivy image --exit-code 0 --severity HIGH,MEDIUM,LOW --output trivy-reports/trivy-report-low-${BUILD_NUMBER}.txt ${image}:V_${BUILD_NUMBER}"
+                        sh "trivy image --format json --output trivy-reports/trivy-report-all-${BUILD_NUMBER}.json ${image}:V_${BUILD_NUMBER}"
                     }
                 }
             }
             post {
                 always {
-                    // Archive the Trivy reports
-                    archiveArtifacts artifacts: 'trivy-reports/*.txt', fingerprint: true
+                    archiveArtifacts artifacts: 'trivy-reports/*', fingerprint: true
                 }
             }
         }
         
         stage('Pushing docker image to Harbor') {
-            agent { label "production" }
             steps {
                 echo "Pushing image to Harbor registry"
                 withDockerRegistry([credentialsId: 'Harborregistrycredentials', url: "${HARBOR_URL}"]) {
-                    sh '''
-                    docker push ${image}:V_${BUILD_NUMBER}
-                    '''
+                    sh 'docker push ${image}:V_${BUILD_NUMBER}'
                 }
             }
         }
@@ -112,16 +98,13 @@ pipeline {
                     )
                 ]) {
                     sh """
-                        ssh -i "${ANSIBLE_KEY}" -o StrictHostKeyChecking=no ${SSH_USERNAME}@192.168.56.210 '
-                            rm -rf /home/vagrant/java_app_harbor || true
-                            mkdir -p /home/vagrant/java_app_harbor
-                            git clone --single-branch --branch harbor \
-                                https://github.com/dipen674/Simple_Java_TM.git /home/vagrant/java_app_harbor
+                        ssh -i "${ANSIBLE_KEY}" ${SSH_USERNAME}@${ANSIBLE_HOST} '
+                            test -f /home/vagrant/myenv/bin/activate || exit 1
                             source /home/vagrant/myenv/bin/activate
-                            cd /home/vagrant/java_app_harbor &&
+                            cd /home/vagrant/java_app_harbor || { mkdir -p /home/vagrant/java_app_harbor; git clone --single-branch --branch harbor https://github.com/dipen674/Simple_Java_TM.git /home/vagrant/java_app_harbor; }
+                            cd /home/vagrant/java_app_harbor && git pull
                             ansible-galaxy collection install community.docker
-                            cd ansible &&
-                            ansible-playbook playbook.yaml -e "build_number=${BUILD_NUMBER}"
+                            cd ansible && ansible-playbook playbook.yaml -e "build_number=${BUILD_NUMBER}"
                         '
                     """
                 }
