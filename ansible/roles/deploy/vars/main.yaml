@@ -1,8 +1,10 @@
 ---
 # Default variables (can be overridden)
 workspace: "/home/vagrant/deploy_app"
-IMAGE: "deependrabhatta/java_app:{{ build_number }}"
+IMAGE: "harbor.registry.local/java_app/taskmanager:V_{{ build_number }}"
 compose_file: "compose.yaml"
 env_file: ".env"
 wait: "wait-for-it.sh"
 sql: "init.sql"
+user: "admin"
+password: "Harbor12345"

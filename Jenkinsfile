@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        image = "harbor.registry.local/java_app/taskmanager:v1"
+        image = "harbor.registry.local/java_app/taskmanager"
     }
 
     stages {
@@ -29,7 +29,7 @@ pipeline {
             agent {label "production"}
             steps {
                 echo "Building docker images'"
-                sh 'docker image build -t ${image}:${BUILD_NUMBER} .'
+                sh 'docker image build -t ${image}:V_${BUILD_NUMBER} .'
             }
         }
         
@@ -37,7 +37,7 @@ pipeline {
             agent {label "production"}
             steps {
                 echo "Scanning image vulneriblity"
-                sh 'trivy image ${image}:${BUILD_NUMBER}'
+                sh 'trivy image ${image}:V_${BUILD_NUMBER}'
             }
         }
         
@@ -48,7 +48,7 @@ pipeline {
                  withDockerRegistry([credentialsId: 'Harborregistrycredentials', url: 'https://harbor.registry.local'])
                  {
                     sh '''
-                    docker push ${image}:${BUILD_NUMBER}
+                    docker push ${image}:V_${BUILD_NUMBER}
                     '''
                 }
             }
