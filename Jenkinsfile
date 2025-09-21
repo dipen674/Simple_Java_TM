@@ -45,13 +45,9 @@ pipeline {
             agent {label "production"}
             steps {
                 echo "pushing image"
-                withCredentials([usernamePassword(
-                    credentialsId: 'jenkinsdockercred',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
+                 withDockerRegistry([credentialsId: 'jenkinsdockercred', url: ''])
+                 {
                     sh '''
-                    docker login -u $DOCKER_USER -p $DOCKER_PASS
                     docker push ${image}:${BUILD_NUMBER}
                     '''
                 }
