@@ -87,7 +87,7 @@ pipeline {
                     if (trivyExitCode == 1) {
                         error "Critical vulnerabilities found! Check trivy-reports/trivy-report-${BUILD_NUMBER}.txt"
                     } else {
-                        sh "trivy image --format json --output trivy-reports/trivy-report-all-${BUILD_NUMBER}.json ${image}:V_${BUILD_NUMBER}"
+                        sh "trivy image --format template --template @/usr/local/share/trivy/templates/html.tpl --output trivy-reports/trivy-report-${BUILD_NUMBER}.html ${image}:V_${BUILD_NUMBER}"
                     }
                 }
             }
