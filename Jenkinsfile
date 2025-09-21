@@ -18,7 +18,7 @@ pipeline {
             }
             steps {
                 echo 'Packaging the code'
-                sh 'mvn clean verify'
+                sh 'mvn clean verify -DskipTests=false'
             }
             post {
                 success {
@@ -45,11 +45,11 @@ pipeline {
                         -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
                         -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml \
                         -Dsonar.scm.provider=git \
-                        -Dsonar.scm.disabled=false"""
+                        -Dsonar.exclusions=**/target/**,**/generated-sources/**"""
                 }
             }
         }
-        
+                
         stage('Build docker image') {
             steps {
                 echo "Building docker image"
