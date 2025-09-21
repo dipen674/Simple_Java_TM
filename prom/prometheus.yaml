@@ -1,0 +1,77 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["192.168.56.210:9093"]
+
+rule_files:
+  - rules.yml
+
+scrape_configs:
+  # Default Prometheus monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels:
+          service: "prometheus"
+          environment: "monitoring"
+
+  # Node Exporters with TLS Auth (using YAML anchors for DRY configuration)
+  - &node_exporter_defaults
+    job_name: "node_exporters"
+    scheme: https
+    basic_auth:
+      username: dipen
+      password: dipu
+    tls_config:
+      ca_file: /etc/prometheus/node_exporter.crt
+      insecure_skip_verify: true
+    static_configs:
+      - targets: ["192.168.56.210:9100"]
+        labels:
+          service: "node_exporter"
+          environment: "ansible"
+          team: "infra"
+      - targets: ["192.168.56.150:9100"]
+        labels:
+          service: "node_exporter"
+          environment: "jenkins"
+          team: "ci/cd"
+      - targets: ["192.168.56.212:9100"]
+        labels:
+          service: "node_exporter"
+          environment: "deployment"
+          team: "prod"
+      - targets: ["192.168.56.211:9100"]
+        labels:
+          service: "node_exporter"
+          environment: "production"
+          team: "prod"
+      - targets: ["192.168.56.220:9100"]
+        labels:
+          service: "node_exporter"
+          environment: "harbor"
+          team: "infra"
+
+  # Docker Engine Metrics
+  - job_name: "docker_engine"
+    static_configs:
+      - targets: 
+          - "192.168.56.212:9323"
+          - "192.168.56.220:9323"
+          - "192.168.56.211:9323"
+        labels:
+          service: "docker_engine"
+
+  # cAdvisor Metrics
+  - job_name: "cadvisor"
+    static_configs:
+      - targets:
+          - "192.168.56.212:8085"
+          - "192.168.56.220:8085"
+          - "192.168.56.211:8085"
+        labels:
+          service: "cadvisor"

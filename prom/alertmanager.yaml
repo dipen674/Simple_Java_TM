@@ -1,0 +1,30 @@
+route:
+  group_by: ['alertname']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 1h
+  receiver: 'web.hook'
+  routes:
+    - match_re:
+        job: (Ansible_VM|Jenkins_VM|Deployment_VM|Production_VM|Docker_Harbor_registry)
+      group_by: ['alertname']
+      receiver: 'slack'
+
+receivers:
+  - name: 'web.hook'
+    webhook_configs:
+      - url: 'http://127.0.0.1:5001/'
+
+  - name: 'slack'
+    slack_configs:
+      - api_url: https://hooks.slack.com/services/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
+        channel: '#devops_demo_app'
+        title: '{{ .GroupLabels.team }} has alerts in env: {{ .GroupLabels.env }}'
+        text: '{{ range .Alerts }}{{ .Annotations.message }}{{ "\n" }}{{ end }}'
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'dev', 'instance']
