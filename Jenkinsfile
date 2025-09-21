@@ -65,12 +65,12 @@ pipeline {
                 ]) {
                     sh """
                     ssh -i "/var/lib/jenkins/keys/id_rsa" -o StrictHostKeyChecking=no vagrant@192.168.56.210 '
-                        rm -rf /home/vagrant/java || true
-                        mkdir -p /home/vagrant/java
-                        git clone --single-branch --branch jenkins \
-                            https://github.com/dipen674/Simple_Java_TM.git /home/vagrant/java
+                        rm -rf /home/vagrant/java_app_harbor || true
+                        mkdir -p /home/vagrant/java_app_harbor
+                        git clone --single-branch --branch harbor \
+                            https://github.com/dipen674/Simple_Java_TM.git /home/vagrant/java_app_harbor
                         source /home/vagrant/myenv/bin/activate
-                        cd /home/vagrant/java &&
+                        cd /home/vagrant/java_app_harbor &&
                         ansible-galaxy collection install community.docker
                         cd ansible &&
                         ansible-playbook playbook.yaml -e "build_number=${BUILD_NUMBER}"
