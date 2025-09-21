@@ -36,14 +36,17 @@ pipeline {
             }
             steps {
                 withSonarQubeEnv('sonar') {
+                    withSonarQubeEnv('sonar') {
                     sh """${scannerHome}/bin/sonar-scanner \
                         -Dsonar.projectKey=taskmanager-webapp \
                         -Dsonar.projectName=taskmanager-webapp \
                         -Dsonar.projectVersion=4.0 \
                         -Dsonar.sources=. \
                         -Dsonar.java.binaries=target/classes \
-                        -Dsonar.junit.reportsPath=target/surefire-reports/ \
+                        -Dsonar.java.libraries=**/*.jar \
+                        -Dsonar.junit.reportsPath=target/surefire-reports \
                         -Dsonar.jacoco.reportsPath=target/jacoco.exec \
+                        -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
                         -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml"""
                 }
             }
@@ -62,17 +65,26 @@ pipeline {
             steps {
                 echo "Scanning image for vulnerabilities"
                 script {
-                    // Fail on critical vulnerabilities, warn on others
+                    // Create reports directory
+                    sh 'mkdir -p trivy-reports'
+                    
+                    // Run Trivy scan and save report to file
                     def trivyExitCode = sh(
-                        script: "trivy image --exit-code 1 --severity CRITICAL ${image}:V_${BUILD_NUMBER}",
+                        script: "trivy image --exit-code 1 --severity CRITICAL --output trivy-reports/trivy-report-${BUILD_NUMBER}.txt ${image}:V_${BUILD_NUMBER}",
                         returnStatus: true
                     )
                     
                     if (trivyExitCode == 1) {
-                        error "Critical vulnerabilities found! Build failed."
+                        error "Critical vulnerabilities found! Build failed. Check the Trivy report at trivy-reports/trivy-report-${BUILD_NUMBER}.txt"
                     } else {
-                        sh "trivy image --exit-code 0 --severity HIGH,MEDIUM,LOW ${image}:V_${BUILD_NUMBER}"
+                        sh "trivy image --exit-code 0 --severity HIGH,MEDIUM,LOW --output trivy-reports/trivy-report-low-${BUILD_NUMBER}.txt ${image}:V_${BUILD_NUMBER}"
                     }
+                }
+            }
+            post {
+                always {
+                    // Archive the Trivy reports
+                    archiveArtifacts artifacts: 'trivy-reports/*.txt', fingerprint: true
                 }
             }
         }
