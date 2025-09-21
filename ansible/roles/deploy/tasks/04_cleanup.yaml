@@ -3,10 +3,17 @@
   community.docker.docker_image_info:
     name: "harbor.registry.local/java_app/taskmanager"
   register: harbor_images
+  failed_when: false
+
+- name: Debug harbor image info
+  ansible.builtin.debug:
+    var: harbor_images.images
+  when: harbor_images.images is defined
 
 - name: Remove all harbor.registry.local/java_app/taskmanager images
   community.docker.docker_image:
     name: "harbor.registry.local/java_app/taskmanager"
     state: absent
-  when: harbor_images.images | length > 0
-  ignore_errors: yes
+    force: yes
+  when: harbor_images.images is defined and harbor_images.images | length > 0
+  ignore_errors: no
