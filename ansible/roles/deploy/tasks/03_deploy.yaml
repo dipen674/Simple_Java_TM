@@ -1,4 +1,7 @@
 ---
+- name: Login to Docker registry using command (on target VM)
+  command: "docker login -u admin -p Harbor12345 harbor.registry.local"
+
 - name: Pull latest images
   ansible.builtin.command: "docker image pull {{ IMAGE }}"
   args:

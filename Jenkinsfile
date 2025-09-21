@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        image = "deependrabhatta/java_app"
+        image = "harbor.registry.local/java_app/taskmanager:v1"
     }
 
     stages {
@@ -45,7 +45,7 @@ pipeline {
             agent {label "production"}
             steps {
                 echo "pushing image"
-                 withDockerRegistry([credentialsId: 'jenkinsdockercred', url: ''])
+                 withDockerRegistry([credentialsId: 'Harborregistrycredentials', url: 'https://harbor.registry.local'])
                  {
                     sh '''
                     docker push ${image}:${BUILD_NUMBER}
