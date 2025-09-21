@@ -8,6 +8,7 @@ pipeline {
 
     environment {
         image = "harbor.registry.local/java_app/taskmanager"
+        scannerHome = tool 'sonar7.2'
     }
 
     stages {
@@ -15,7 +16,7 @@ pipeline {
             agent {label "production"}
             steps {
                 echo 'packaging the code'
-                sh 'mvn clean package'
+                sh 'mvn clean verify'
             }
             post {
                 success {
@@ -76,6 +77,20 @@ pipeline {
                         ansible-playbook playbook.yaml -e "build_number=${BUILD_NUMBER}"
                     '
                     """
+                }
+            }
+        }
+        stage('Sonar Analysis') {
+            agent {label "production"}
+            steps {
+                withSonarQubeEnv('sonar') { // 'sonar' is the name of the SonarQube server instance in Jenkins
+                    sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=taskmanager-webapp \
+                        -Dsonar.projectName=taskmanager-webapp \                          #pom.xml filename
+                        -Dsonar.projectVersion=4.0 \                                      #Project version is 4.0 now running.
+                        -Dsonar.sources=. \ #path of source code
+                        -Dsonar.junit.reportsPath=target/surefire-reports/ \
+                        -Dsonar.jacoco.reportsPath=target/jacoco.exec \
+                        -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
                 }
             }
         }
