@@ -1,6 +1,34 @@
----
-- name: Prune all unused Docker images
-  command: docker image prune -a --force
+# roles/deploy/tasks/04_cleanup.yaml
+- name: Get list of existing taskmanager images
+  shell: |
+    docker images --format "{{.Repository}}:{{.Tag}}" \
+    | grep "harbor.registry.local/java_app/taskmanager" \
+    | grep -E "V_[0-9]+"
+  register: existing_images
+  changed_when: false
+
+- name: Extract image versions and sort
+  set_fact:
+    image_versions: "{{ existing_images.stdout_lines | map('regex_replace', '.*:V_', '') | map('int') | sort }}"
+
+- name: Determine images to keep (current and previous version)
+  set_fact:
+    keep_versions: "{{ image_versions[-2:] | default([]) }}"
+
+- name: Generate list of images to remove
+  set_fact:
+    images_to_remove: "{{ existing_images.stdout_lines | reject('match', '.*:V_(' + (keep_versions | join('|')) + ')$') }}"
+
+- name: Remove old images
+  docker_image:
+    name: "{{ item }}"
+    state: absent
+  with_items: "{{ images_to_remove }}"
+  ignore_errors: yes
+  when: images_to_remove | length > 0
+
+- name: Perform Docker system prune
+  command: docker system prune -a -f
   args:
-    warn: false  # Suppress warning about using 'command' module
+    warn: false
   ignore_errors: yes
