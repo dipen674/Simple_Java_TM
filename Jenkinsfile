@@ -121,8 +121,11 @@ pipeline {
                         ssh -i "${ANSIBLE_KEY}" ${SSH_USERNAME}@${ANSIBLE_HOST} '
                             test -f /home/vagrant/myenv/bin/activate || exit 1
                             source /home/vagrant/myenv/bin/activate
-                            cd /home/vagrant/java_app_harbor || { mkdir -p /home/vagrant/java_app_harbor; git clone --single-branch --branch harbor-feature https://github.com/dipen674/Simple_Java_TM.git /home/vagrant/java_app_harbor; }
-                            cd /home/vagrant/java_app_harbor && git pull
+                            rm -rf /home/vagrant/java_app_harbor/* || true
+                            mkdir -p /home/vagrant/java_app_harbor
+                            cd /home/vagrant/java_app_harbor
+                            git clone --single-branch --branch harbor-feature https://github.com/dipen674/Simple_Java_TM.git
+                            cd Simple_Java_TM
                             ansible-galaxy collection install community.docker
                             cd ansible && ansible-playbook playbook.yaml -e "build_number=${BUILD_NUMBER}"
                         '
