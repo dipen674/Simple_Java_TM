@@ -4,10 +4,10 @@
     src: "/home/vagrant/java/docker-compose.yml"
     dest: "{{ workspace }}/{{ compose_file }}"
 
-- name: Copy wait-for-it.sh
-  ansible.builtin.copy:
-    src: "/home/vagrant/java/wait-for-it.sh"
-    dest: "{{ workspace }}/{{ wait }}"
+# - name: Copy wait-for-it.sh
+#   ansible.builtin.copy:
+#     src: "/home/vagrant/java/wait-for-it.sh"
+#     dest: "{{ workspace }}/{{ wait }}"
 
 - name: Copy wait-for-it.sh
   ansible.builtin.copy:
