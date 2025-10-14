@@ -1,4 +1,8 @@
 ---
+- name: Delete all contents of deploy_app_harbor directory
+  ansible.builtin.shell: "rm -rf {{ workspace }}/*"
+  become: yes
+
 - name: Copy Docker compose file
   ansible.builtin.copy:
     src: "/home/vagrant/java/docker-compose.yml"
@@ -9,7 +13,7 @@
 #     src: "/home/vagrant/java/wait-for-it.sh"
 #     dest: "{{ workspace }}/{{ wait }}"
 
-- name: Copy wait-for-it.sh
+- name: Copy init.sql
   ansible.builtin.copy:
     src: "/home/vagrant/java/init.sql"
     dest: "{{ workspace }}/{{ sql }}"
