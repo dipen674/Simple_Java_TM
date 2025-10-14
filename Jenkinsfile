@@ -71,7 +71,7 @@ pipeline {
         stage('Build docker image') {
             steps {
                 echo "Building docker image"
-                sh 'docker image build -t ${image}:V_${BUILD_NUMBER} .'
+                sh 'docker image build --no-cache -t ${image}:V_${BUILD_NUMBER} .'
             }
         }
         
