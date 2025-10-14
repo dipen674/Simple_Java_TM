@@ -11,13 +11,3 @@
   ansible.builtin.command: "docker compose up -d"
   args:
     chdir: "{{ workspace }}"
-
-- name: Remove volume
-  ansible.builtin.command: "docker compose down -v"
-  args:
-    chdir: "{{ workspace }}"
-
-- name: Deploy application
-  ansible.builtin.command: "docker compose up -d"
-  args:
-    chdir: "{{ workspace }}"
