@@ -5,7 +5,7 @@
 
 - name: Copy Docker compose file
   ansible.builtin.copy:
-    src: "/home/vagrant/java/docker-compose.yml"
+    src: "{{ src_path }}/docker-compose.yml"
     dest: "{{ workspace }}/{{ compose_file }}"
 
 # - name: Copy wait-for-it.sh
@@ -15,7 +15,7 @@
 
 - name: Copy init.sql
   ansible.builtin.copy:
-    src: "/home/vagrant/java/init.sql"
+    src: "{{ src_path }}/init.sql"
     dest: "{{ workspace }}/{{ sql }}"
 
 
