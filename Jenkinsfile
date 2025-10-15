@@ -145,13 +145,10 @@ post {
          always {
         node('production') {
             script {
-                // Clean up unused Docker resources
                 sh "docker system prune -a -f || true"
-                
-                // Pull current image
+        
                 sh "docker pull ${image}:V_${BUILD_NUMBER} || true"
                 
-                // Calculate previous build number and pull that image
                 def previousBuildNumber = BUILD_NUMBER.toInteger() - 1
                 sh "docker pull ${image}:V_${previousBuildNumber} || true"
                 
