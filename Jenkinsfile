@@ -118,22 +118,34 @@ pipeline {
                     )
                 ]) {
                     sh """
-                        ssh -i "${ANSIBLE_KEY}" ${SSH_USERNAME}@${ANSIBLE_HOST} '
-                            test -f /home/vagrant/myenv/bin/activate || exit 1
-                            source /home/vagrant/myenv/bin/activate
-                            rm -rf /home/vagrant/java_app_harbor/* || true
-                            mkdir -p /home/vagrant/java_app_harbor
-                            mkdir -p /home/vagrant/java_app_required_files
-                            cd /home/vagrant/java_app_harbor
-                            git clone --single-branch --branch harbor-feature https://github.com/dipen674/Simple_Java_TM.git
-                            cd Simple_Java_TM
-                            cp Dockerfile docker-compose.yaml init.sql /home/vagrant/java_app_required_files
-                            rm -rf /home/vagrant/java_app_harbor
-                            cd /home/vagrant/java_app_required_files
-                            git clone https://github.com/dipen674/Ansible_configs_project.git
-                            ansible-galaxy collection install community.docker
-                            cd Ansible_configs_project && ansible-playbook playbook.yaml -e "build_number=${BUILD_NUMBER}"
-                        '
+                    ssh -i "${ANSIBLE_KEY}" ${SSH_USERNAME}@${ANSIBLE_HOST} '
+                        set -e  # Exit on any error
+                        
+                        echo "=== Activating Virtual Environment ==="
+                        test -f /home/vagrant/myenv/bin/activate || { echo "Virtual environment not found"; exit 1; }
+                        source /home/vagrant/myenv/bin/activate
+                        
+                        echo "=== Setting Up Directory Structure ==="
+                        rm -rf /home/vagrant/{java_app_required_files,java_app_harbor}
+                        mkdir -p /home/vagrant/java_app_required_files
+                        
+                        echo "=== Downloading Application Files ==="
+                        cd /home/vagrant
+                        git clone --single-branch --branch harbor-feature https://github.com/dipen674/Simple_Java_TM.git java_app_harbor
+                        cp java_app_harbor/{Dockerfile,docker-compose.yml,init.sql} java_app_required_files/
+                        rm -rf java_app_harbor
+                        
+                        echo "=== Downloading Ansible Configurations ==="
+                        cd /home/vagrant/java_app_required_files
+                        git clone https://github.com/dipen674/Ansible_configs_project.git
+                        
+                        echo "=== Running Ansible Deployment ==="
+                        ansible-galaxy collection install community.docker
+                        cd Ansible_configs_project
+                        ansible-playbook playbook.yaml -e "build_number=${BUILD_NUMBER}"
+                        
+                        echo "=== Deployment Completed Successfully ==="
+                    '
                     """
                 }
             }
