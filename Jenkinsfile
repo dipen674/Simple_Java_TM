@@ -78,18 +78,8 @@ pipeline {
         stage('Image scanning with Trivy') {
             steps {
                 echo "Scanning image for vulnerabilities"
-                script {
-                    sh 'mkdir -p trivy-reports'
-                    def trivyExitCode = sh(
-                        script: "trivy image --exit-code 1 --severity CRITICAL --output trivy-reports/trivy-report-${BUILD_NUMBER}.txt ${image}:V_${BUILD_NUMBER}",
-                        returnStatus: true
-                    )
-                    if (trivyExitCode == 1) {
-                        error "Critical vulnerabilities found! Check trivy-reports/trivy-report-${BUILD_NUMBER}.txt"
-                    } else {
-                        sh "trivy image --format template --template @/usr/local/share/trivy/templates/html.tpl --output trivy-reports/trivy-report-${BUILD_NUMBER}.html ${image}:V_${BUILD_NUMBER}"
-                    }
-                }
+                sh 'mkdir -p trivy-reports'
+                sh "trivy image --exit-code 1 --severity CRITICAL --format template --template @/usr/local/share/trivy/templates/html.tpl --output trivy-reports/trivy-report-${BUILD_NUMBER}.html ${image}:V_${BUILD_NUMBER}"
             }
             post {
                 always {
