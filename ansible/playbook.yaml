@@ -1,6 +1,0 @@
----
-- name: Deploy application to target server
-  hosts: deploy_VM
-  become: yes
-  roles:
-    - role: deploy

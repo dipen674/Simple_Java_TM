@@ -123,11 +123,16 @@ pipeline {
                             source /home/vagrant/myenv/bin/activate
                             rm -rf /home/vagrant/java_app_harbor/* || true
                             mkdir -p /home/vagrant/java_app_harbor
+                            mkdir -p /home/vagrant/java_app_required_files
                             cd /home/vagrant/java_app_harbor
                             git clone --single-branch --branch harbor-feature https://github.com/dipen674/Simple_Java_TM.git
                             cd Simple_Java_TM
+                            cp Dockerfile docker-compose.yaml init.sql /home/vagrant/java_app_required_files
+                            rm -rf /home/vagrant/java_app_harbor
+                            cd /home/vagrant/java_app_required_files
+                            git clone https://github.com/dipen674/Ansible_configs_project.git
                             ansible-galaxy collection install community.docker
-                            cd ansible && ansible-playbook playbook.yaml -e "build_number=${BUILD_NUMBER}"
+                            cd Ansible_configs_project && ansible-playbook playbook.yaml -e "build_number=${BUILD_NUMBER}"
                         '
                     """
                 }
