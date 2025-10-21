@@ -18,8 +18,31 @@ pipeline {
                 scannerHome = tool 'sonar7.2'
             }
             steps {
-                echo 'Packaging the code'
-                sh 'mvn clean package'
+                echo 'Compiling the code'
+                sh 'mvn clean compile'
+            }
+        }
+        
+        stage('Run Unit Tests') {
+            steps {
+                echo 'Running unit tests'
+                sh 'mvn test'
+            }
+            post {
+                always {
+                    // Publish JUnit test results
+                    junit 'target/surefire-reports/*.xml'
+                }
+                failure {
+                    error 'Unit tests failed! Build will be aborted.'
+                }
+            }
+        }
+        
+        stage('Package Application') {
+            steps {
+                echo 'Packaging the application'
+                sh 'mvn package -DskipTests' // Skip tests since they already ran
             }
             post {
                 success {
@@ -29,6 +52,24 @@ pipeline {
             }
         }
         
+        stage('Sonar Analysis') {
+            environment {
+                scannerHome = tool 'sonar7.2'
+            }
+            steps {
+                withSonarQubeEnv('sonar') {
+                    sh """${scannerHome}/bin/sonar-scanner \
+                        -Dsonar.projectKey=taskmanager-webapp \
+                        -Dsonar.projectName=taskmanager-webapp \
+                        -Dsonar.projectVersion=4.0 \
+                        -Dsonar.sources=src/main/java,src/main/webapp \
+                        -Dsonar.java.binaries=target/classes \
+                        -Dsonar.java.libraries=**/*.jar \
+                        -Dsonar.scm.provider=git"""
+                }
+            }
+        }
+
         stage('Upload Artifact to Nexus') {
             steps {
                 echo "Uploading artifact to Nexus repository"
@@ -50,24 +91,6 @@ pipeline {
             }
         }
         
-        stage('Sonar Analysis') {
-            environment {
-                scannerHome = tool 'sonar7.2'
-            }
-            steps {
-                withSonarQubeEnv('sonar') {
-                    sh """${scannerHome}/bin/sonar-scanner \
-                        -Dsonar.projectKey=taskmanager-webapp \
-                        -Dsonar.projectName=taskmanager-webapp \
-                        -Dsonar.projectVersion=4.0 \
-                        -Dsonar.sources=src/main/java,src/main/webapp \
-                        -Dsonar.java.binaries=target/classes \
-                        -Dsonar.java.libraries=**/*.jar \
-                        -Dsonar.scm.provider=git"""
-                }
-            }
-        }
-                
         stage('Build docker image') {
             steps {
                 echo "Building docker image"
@@ -84,6 +107,18 @@ pipeline {
             post {
                 always {
                     archiveArtifacts artifacts: 'trivy-reports/*', fingerprint: true
+                    
+                    // Cleanup old Trivy reports - keep only latest 3
+                    sh '''
+                        echo "Cleaning up old Trivy reports, keeping only latest 3..."
+                        cd trivy-reports
+                        ls -1t trivy-report-*.html 2>/dev/null | tail -n +4 | while read file; do
+                            echo "Removing old report: $file"
+                            rm -f "$file"
+                        done
+                        echo "Current Trivy reports:"
+                        ls -la trivy-report-*.html 2>/dev/null || echo "No Trivy reports found"
+                    '''
                 }
             }
         }
@@ -141,21 +176,22 @@ pipeline {
             }
         }
     }
-post {
-         always {
-        node('production') {
-            script {
-                sh "docker system prune -a -f || true"
-        
-                sh "docker pull ${image}:V_${BUILD_NUMBER} || true"
-                
-                def previousBuildNumber = BUILD_NUMBER.toInteger() - 1
-                sh "docker pull ${image}:V_${previousBuildNumber} || true"
-                
-                echo "Cleanup completed on production node and images pulled"
+    
+    post {
+        always {
+            node('production') {
+                script {
+                    sh "docker system prune -a -f || true"
+            
+                    sh "docker pull ${image}:V_${BUILD_NUMBER} || true"
+                    
+                    def previousBuildNumber = BUILD_NUMBER.toInteger() - 1
+                    sh "docker pull ${image}:V_${previousBuildNumber} || true"
+                    
+                    echo "Cleanup completed on production node and images pulled"
+                }
             }
         }
-    }
 
         success {
             node('master') {
