@@ -28,15 +28,6 @@ pipeline {
                 echo 'Running unit tests'
                 sh 'mvn test'
             }
-            post {
-                always {
-                    // Publish JUnit test results
-                    junit 'target/surefire-reports/*.xml'
-                }
-                failure {
-                    error 'Unit tests failed! Build will be aborted.'
-                }
-            }
         }
         
         stage('Package Application') {
