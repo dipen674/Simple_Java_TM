@@ -28,6 +28,7 @@ pipeline {
                 echo 'Running unit tests'
                 sh 'mvn test'
             }
+
         }
         
         stage('Package Application') {
@@ -153,7 +154,7 @@ pipeline {
                         
                         echo "=== Downloading Ansible Configurations ==="
                         cd /home/vagrant/java_app_required_files
-                        git clone https://github.com/dipen674/Ansible_configs_project.git
+                        git clone https://github.com/dipen674/Ansible_configs_project/
                         
                         echo "=== Running Ansible Deployment ==="
                         ansible-galaxy collection install community.docker
