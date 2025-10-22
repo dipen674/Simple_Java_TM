@@ -100,7 +100,7 @@ pipeline {
                 always {
                     archiveArtifacts artifacts: 'trivy-reports/*', fingerprint: true
                     
-                    // Cleanup old Trivy report
+                    // Cleanup old Trivy reports - keep only latest 3
                     sh '''
                         echo "Cleaning up old Trivy reports, keeping only latest 3..."
                         cd trivy-reports
