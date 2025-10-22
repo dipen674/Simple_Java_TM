@@ -104,10 +104,16 @@ pipeline {
                     sh '''
                         echo "Cleaning up old Trivy reports, keeping only latest 3..."
                         cd trivy-reports
-                        ls -1t trivy-report-*.html 2>/dev/null | tail -n +4 | while read file; do
+                        
+                        # Get all report files and sort by build number, remove all but last 3
+                        ls trivy-report-*.html 2>/dev/null | \
+                        sort -t- -k3 -n | \
+                        head -n -3 | \
+                        while read file; do
                             echo "Removing old report: $file"
                             rm -f "$file"
                         done
+                        
                         echo "Current Trivy reports:"
                         ls -la trivy-report-*.html 2>/dev/null || echo "No Trivy reports found"
                     '''
