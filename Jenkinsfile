@@ -142,7 +142,7 @@ pipeline {
                 ]) {
                     sh """
                     ssh -i "${ANSIBLE_KEY}" ${SSH_USERNAME}@${ANSIBLE_HOST} '
-                        set -e  # Exit on any error
+                        set -e 
                         
                         echo "=== Activating Virtual Environment ==="
                         test -f /home/vagrant/myenv/bin/activate || { echo "Virtual environment not found"; exit 1; }
