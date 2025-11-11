@@ -154,7 +154,7 @@ pipeline {
                         
                         echo "=== Downloading Application Files ==="
                         cd /home/vagrant
-                        git clone --single-branch --branch harbor-feature https://github.com/dipen674/Simple_Java_TM.git java_app_harbor
+                        git clone --single-branch --branch harbor https://github.com/dipen674/Simple_Java_TM.git java_app_harbor
                         cp java_app_harbor/{Dockerfile,docker-compose.yml,init.sql} java_app_required_files/
                         rm -rf java_app_harbor
                         
