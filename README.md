@@ -1,610 +1,456 @@
 # Task Manager Web Application
 
-A production-grade Java web application demonstrating enterprise CI/CD practices with automated deployment, security scanning, and infrastructure as code.
-
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![Docker](https://img.shields.io/badge/docker-ready-blue)]()
-[![License](https://img.shields.io/badge/license-MIT-green)]()
-
-The Task Manager is a full-stack Java web application that showcases modern DevOps practices including:
-
-- ✅ Automated CI/CD with Jenkins
-- ✅ Infrastructure as Code with Ansible
-- ✅ Containerization with Docker
-- ✅ Security scanning with Trivy
-- ✅ Code quality analysis with SonarQube
-- ✅ Artifact management with Nexus
-- ✅ Container registry with Harbor
-- ✅ Monitoring with Prometheus & Alertmanager
-
-
 ## 🛠️ Technology Stack
-### Backend
-- **Language:** Java 8+
-- **Framework:** Java Servlets, JSP
-- **Build Tool:** Apache Maven 3.6+
-- **Web Server:** Apache Tomcat 9.0
 
-### Frontend
-- **Languages:** HTML5, CSS3, JavaScript
-
-### Database
-- **RDBMS:** MySQL 8.0
-
-### DevOps & Infrastructure
-- **CI/CD:** Jenkins (declarative pipeline)
-- **Configuration Management:** Ansible 2.9+
-- **Containerization:** Docker, Docker Compose
-- **Image Registry:** Harbor (harbor.registry.local)
-- **Artifact Repository:** Nexus 3
-- **Security Scanning:** Trivy
-- **Code Quality:** SonarQube 7.2
-- **Monitoring:** Prometheus, Alertmanager
-
----
+- **Backend**: Java Servlets, JSP
+- **Frontend**: HTML5, CSS3, JavaScript, JSTL
+- **Database**: MySQL
+- **Containerization**: Docker, Docker Compose
+- **Web Server**: Apache Tomcat
+- **Build Tool**: Maven
+- **CI/CD**: Jenkins Pipeline
+- **Configuration Management**: Ansible
+- **Code Quality**: SonarQube
+- **Artifact Repository**: Nexus Repository Manager
+- **Container Registry**: Harbor
+- **Security Scanning**: Trivy
+- **Monitoring**: Prometheus and grafana are used to monitor all the metrics.
 
 ## 🏗️ Architecture
+### Architecture Diagram
 
+<div align="center">
+  <img src="architecture_diagram.png" alt="Task Manager Application Architecture" width="800"/>
+</div>
 
-### VM Responsibilities
-- **Jenkins VM** | CI/CD Pipeline | Jenkins, Git | 8080 |
-- **Production VM (Agent)** | Build & Scan | Docker, Trivy, Maven | 2375 |
-- **Ansible VM** | Configuration Management | Ansible, Python venv |Prometheus| Grafana| 9090| 3000 |
-- **Production VM (Target)** | Application Hosting | Docker, MySQL | 8080, 3306 |
-- **Harbor VM** | Container Registry | Harbor | 443, 4443 |
-- **Nexus VM** | Artifact Repository and code analysis | SonarQube | Nexus 3 | 9000 | 8081 |
+The application follows a distributed architecture with separate VMs for different concerns:
 
-Node exporter installed on all VMs for monitoring and CAdvisor installed on Production VM, Deployment VM and Harbor VM for container monitoring.
+- **Jenkins VM**: CI/CD pipeline execution and orchestration
+- **Ansible VM** (192.168.56.210): Configuration management and deployment orchestration
+- **Production VM**: Application deproduction target. Where we build image and push it to the image registry
+- **Deployment VM**: Used for the application deployment and accessed by anisble to deploy the appliationContext
+Where and when it is being communcated
 
-### Application Architecture
+- **SonarQube Server**: Static code analysis and quality gate checks
+- **Nexus Repository** (192.168.56.6:8081): Artifact management and versioning
+- **NOTE**: Node exporter is installed in all VMs and CAdvisor is installed in production, deployment and harbor registry virtual machine to extract the metrics.
+- **Prometheus and Grafana**: To monitor the metrics we have used prometheus and grafana. Node exporter is installed in all VMs and cAvisor is installed in harbor, deployment and production VM. The prometheus rules and alerts files can be found in
+- **prometheus configurations**: [Prometheus_configurations_project](https://github.com/dipen674/Prometheus_configurations_project.git)
 
-The application follows the **MVC (Model-View-Controller)** pattern:
-
-```
-┌──────────────┐
-│   Browser    │
-└──────┬───────┘
-       │ HTTP Request
-       ▼
-┌──────────────────────────────────────┐
-│         Controller Layer             │
-│  (Servlets: Login, Task, Category)   │
-└──────────────┬───────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────┐
-│          Service Layer               │
-│  (Business Logic & Validation)       │
-└──────────────┬───────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────┐
-│           Model Layer                │
-│     (User, Task, Category)           │
-└──────────────┬───────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────┐
-│       Database (MySQL)               │
-│   (Persistent Storage)               │
-└──────────────────────────────────────┘
-```
-
----
 
 ## 📁 Project Structure
-
-### Application Repository
 
 ```
 taskmanager-webapp/
 ├── src/main/
 │   ├── java/com/example/taskmanager/
-│   │   ├── controller/          # HTTP request handlers
-│   │   ├── model/               # Data entities
+│   │   ├── controller/          # Servlets
+│   │   ├── model/               # Data models
 │   │   ├── service/             # Business logic
 │   │   └── util/                # Utility classes
 │   └── webapp/
-│       ├── css/
-│       │   └── style.css        # Application styles
-│       ├── js/
-│       │   └── script.js        # Client-side logic
-│       ├── index.jsp            # Landing page
-│       ├── META-INF/
-│       │   └── context.xml      # Database configuration
-│       └── WEB-INF/
-│           ├── views/           # JSP templates
-│           └── web.xml          # Servlet mappings
+│       ├── css/style.css        # Styling
+│       ├── js/script.js         # Client-side logic
+│       ├── WEB-INF/views/       # JSP pages
+│       └── META-INF/context.xml # Database configuration
 ├── docker-compose.yml           # Multi-container setup
-├── Dockerfile                   # Application container definition
-├── init.sql                     # Database initialization script
-├── Jenkinsfile                  # CI/CD pipeline definition
-├── pom.xml                      # Maven dependencies
-└── README.md                 
+├── Dockerfile                   # Application container
+├── Jenkinsfile                  # CI/CD pipeline
+├── init.sql                     # Database schema
+└── pom.xml                      # Maven configuration
 ```
 
-### Ansible Repository Structure
-- Ansible Configs: https://github.com/dipen674/Ansible_configs_project
+## 📦 Related Repositories
 
-```
-TM-javaapp_ansible/
-├── ansible.cfg                  # Ansible configuration
-├── inventory.ini                # Target hosts inventory
-├── playbook.yaml                # Main orchestration playbook
-├── prometheus/                  # Monitoring configurations
-│   ├── alertmanager.yml         # Alert routing rules
-│   ├── prometheus.yml           # Prometheus scrape config
-│   └── rules.yml                # Alerting rules
-└── roles/
-    └── deploy/                  # Deployment role
-        ├── tasks/
-        │   ├── 01_setup.yaml       # Environment preparation
-        │   ├── 02_configs.yaml     # Configuration management
-        │   ├── 03_deploy.yaml      # Application deployment
-        │   ├── 04_cleanup.yaml     # Resource cleanup
-        │   └── main.yaml           # Task orchestration
-        ├── templates/              # Jinja2 templates
-        └── vars/
-            └── main.yaml           # Role variables
-```
-
----
+- **Application Code**: [Simple_Java_TM](https://github.com/dipen674/Simple_Java_TM) (branch: `docker`)
+- **Ansible Configurations**: [Ansible_configs_project](https://github.com/dipen674/Ansible_configs_project) (branch: `docker`)
 
 ## 🚀 Infrastructure Setup
 
 ### Prerequisites
 
-- VirtualBox or VMware for VM management
-- SSH access configured between VMs
-- Git installed on all VMs
-- Internet connectivity for package downloads
-
-### 1. Jenkins VM Setup
+#### 1. Jenkins VM Setup
+```bash
+# Install required software
 - Install Jenkins
-- Generate SSH key for Ansible VM access
-```
-sudo -u jenkins ssh-keygen -t rsa -b 4096 -f /var/lib/jenkins/.ssh/id_rsa -N ""
 ```
 
-The key should be generated with jenkins user and copied to Ansible VMs authorized_keys. If Jenkins user cannot access the ansible 
-machine then the jenkins pipeline cannot trigger ansible machine via ssh command.
+**Required Jenkins Plugins:**
+- GitHub Integration Plugin
+- Docker Pipeline Plugin
+- SSH Agent Plugin
+- Nexus Artifact Uploader
+- SonarQube Scanner Plugin
+- Pipeline Plugin
 
-```
-root@jenkins:/var/lib/jenkins/keys# ls -la
-total 20
-drwx------  2 jenkins jenkins 4096 Sep  7 16:21 .
-drwxr-xr-x 20 jenkins jenkins 4096 Oct 15 03:10 ..
--rw-------  1 jenkins jenkins 3381 Sep  7 16:15 id_rsa
--rw-r--r--  1 jenkins jenkins  741 Sep  7 16:15 id_rsa.pub
--rw-r--r--  1 jenkins jenkins  284 Sep  7 16:21 known_hosts
-```
+**Jenkins Credentials Configuration:**
+- `Harborregistrycredentials`: Harbor registry username and password/token
+- `ansible-ssh-key`: SSH private key for Ansible VM access
+- `nexus-credentials`: Nexus repository credentials
+- `sonar`: SonarQube authentication token
 
-***Copy the key to the ansible vm and make sure the user should be jenkins.***
 
-```
-su jenkins
-ssh-copy-id usernameofnode@ipadressofnode
- - ssh-copy-id vagrant@192.168.56.211
-```
-***Then try to access the machine from jenkins user***
+**Production Node Configuration:**
+- Label: `production`
+- SSH connection to Production VM
+- Docker installed and accessible
+- maven installed
+- trivy installed
+- Added as worker node of the jenkins and labeled as **production** node
 
-# Install required packages
-**Jenkins Configuration:**
-1. Install required plugins:
-   - Git Plugin
-   - Docker Pipeline
-   - SonarQube Scanner
-   - Nexus Artifact Uploader
-   - Email Extension
-2. Configure tools in Global Tool Configuration:
-   - SonarQube Scanner: `sonar7.2`
-3. Add credentials:
-   - `nexus-credentials`: Username/password for Nexus
-   - `Harborregistrycredentials`: Username/password for Harbor
-   - `ansible-ssh-key`: SSH private key for Ansible VM
-   - `github tokken`: To trigger webhook
-
-### 2. Production VM (Build Agent) Setup
-
+#### 2. Ansible VM Setup (192.168.56.210)
 ```bash
-# Install Docker
-# Install Java
-# Install Maven
-# Install Trivy
-# configure SSH to add node in jenkins master
-ssh-copy-id usernameofnode@ipadressofnode
- - ssh-copy-id vagrant@192.168.56.211
-Use this command to copy the public key of jenkins master to production vm
-# Copy Jenkins VM public key to /home/jenkins/.ssh/authorized_keys
+- Install python
+- Create Python virtual environment
+- Install Ansible
+- prometheus and grafana are also running in this VM
+
+# Configure SSH access to deployment VM. Accessed by ansible to configure deployment server
+ssh-keygen -t rsa
+ssh-copy-id user@deployment-vm-ip
 ```
 
-**Connect Agent to Jenkins:**
-1. Navigate to Jenkins → Manage Jenkins → Manage Nodes
-2. Add new node with label `production`
-3. Configure launch method as "Launch agents via SSH"
 
-### 3. Ansible VM Setup (192.168.56.210)
 
+#### 3. SonarQube Server Setup
 ```bash
-# Install Ansible
-# Create Python virtual environment
-# Install Ansible collections
-Via pipeline
-# Configure SSH access
-copy ssh key of the ansible to the deployment_vm so tha the ansible_vm can access the deployment vm
+# Install and configure SonarQube
+# Create project key: taskmanager-webapp
+# Generate authentication token for Jenkins
 ```
 
-### 4. Deployment VM (Deployment Target) Setup
+**SonarQube Configuration:**
+- Project Key: `taskmanager-webapp`
+- Project Name: `taskmanager-webapp`
+- Configure quality gates and rules as needed
 
+#### 4. Nexus Repository Setup (192.168.56.6:8081)
 ```bash
-# Install Docker and Docker Compose
-# Configure SSH for Ansible
-# Copy Ansible VM public key to /home/vagrant/.ssh/authorized_keys
-and check the connection
+# Install Nexus Repository Manager
+# Create repository: Javaapp_TM
+# Configure credentials for Jenkins access
 ```
 
----
+**Nexus Repository Configuration:**
+- Repository Name: `Javaapp_TM`
+- Repository Type: Maven (hosted)
+- Group ID: `QA`
+- Create deployment user credentials
 
-## 🔄 CI/CD Pipeline
+## 🔄 CI/CD Pipeline Workflow
 
 ### Pipeline Trigger
+The pipeline automatically triggers on push to the `jenkins` branch via GitHub webhook integration. I have used ngrok to congigure webhook in the Github.
 
-The pipeline automatically triggers on push to the GitHub repository using webhooks.
-For this i have installed ngrok and using the ngrok to trigger the webhook.
+### Stage-by-Stage Execution
 
+#### **Stage 1: Code Compilation**
+- Here jenkins executor is production_VM which i have added as a node in jenkins
 ```groovy
-triggers {
-    githubPush()
-}
+Agent: None (uses default Jenkins executor)
+Purpose: Compile Java source code and verify syntax
 ```
+**Activities:**
+- Executes `mvn clean compile`
+- Downloads project dependencies
+- Compiles Java servlets and classes
+- Validates code structure and syntax
+- SonarQube scanner tool preparation
 
-### Pipeline Stages
-
-#### Stage 1: Compile the Code
-**Agent:** `production` (Build VM)
-
-```bash
-mvn clean package -DskipTests=true
-```
-
-**Actions:**
-- Cleans previous build artifacts
-- Compiles Java source code
-- Packages application into WAR file
-- Archives `taskmanager-webapp.war`
-
-**Artifacts:** `target/*.war`
+**Output:** Compiled classes in `target/classes/`
 
 ---
 
-#### Stage 2: Upload Artifact to Nexus
-**Agent:** `production`
-
+#### **Stage 2: Run Unit Tests**
 ```groovy
-nexusArtifactUploader(
-    nexusVersion: 'nexus3',
-    protocol: 'http',
-    nexusUrl: '192.168.56.6:8081',
-    groupId: 'QA',
-    version: "${BUILD_ID}-${BUILD_TIMESTAMP}",
-    repository: 'Javaapp_TM',
-    credentialsId: 'nexus-credentials',
-    artifacts: [[
-        artifactId: 'taskmanager-webapp',
-        file: 'target/taskmanager-webapp.war',
-        type: 'war'
-    ]]
-)
+Agent: None (uses default Jenkins executor)
+Purpose: Execute automated unit tests
 ```
+**Activities:**
+- Runs `mvn test`
+- Executes JUnit/TestNG test cases  
+- Validates business logic and functionality
 
-**Actions:**
-- Authenticates with Nexus repository
-- Uploads versioned WAR artifact
-- Tags with build ID and timestamp
+**Output:** Test results and reports in `target/surefire-reports/`
 
 ---
 
-#### Stage 3: Sonar Analysis
-**Agent:** `production`
-
-```bash
-sonar-scanner \
-  -Dsonar.projectKey=taskmanager-webapp \
-  -Dsonar.projectName=taskmanager-webapp \
-  -Dsonar.projectVersion=4.0 \
-  -Dsonar.sources=src/main/java,src/main/webapp \
-  -Dsonar.java.binaries=target/classes
+#### **Stage 3: Package Application**
+```groovy
+Agent: None (uses default Jenkins executor)
+Purpose: Create deployable WAR artifact
 ```
+**Activities:**
+- Executes `mvn package -DskipTests`
+- Packages compiled code into WAR file
+- Includes web resources (JSP, CSS, JavaScript)
+- Bundles configuration files
+- Archives artifact in Jenkins for audit trail
 
-**Quality Gates:**
-- Code coverage analysis
-- Bug detection
-- Code smell identification
-- Security vulnerability scanning
-- Technical debt assessment
+**Output:** `target/taskmanager-webapp.war`
+
+**Post-Actions:**
+- Archives WAR artifact in Jenkins
+- Makes artifact available for deployment
 
 ---
 
-#### Stage 4: Build Docker Image
-**Agent:** `production`
-
-```bash
-docker image build --no-cache -t harbor.registry.local/java_app/taskmanager:V_${BUILD_NUMBER} .
+#### **Stage 4: SonarQube Analysis**
+```groovy
+Agent: None (uses default Jenkins executor)
+Tool: SonarQube Scanner 7.2
+Purpose: Static code analysis and quality assessment
 ```
+**Activities:**
+- Scans Java source code (`src/main/java`)
+- Analyzes web resources (`src/main/webapp`)
+- Evaluates code against quality profiles
+- Checks for code smells, bugs, and vulnerabilities
+- Calculates code coverage metrics
 
-**Dockerfile Layers:**
-1. Base image: `tomcat:9.0-jdk11`
-2. WAR deployment to `/usr/local/tomcat/webapps/`
-3. Environment configuration
-4. Port exposure: 8080
+**Quality Metrics Analyzed:**
+- Code coverage percentage
+- Code duplication
+- Cyclomatic complexity
+- Security vulnerabilities
+- Maintainability rating
+- Reliability rating
 
 ---
 
-#### Stage 5: Image Scanning with Trivy
-**Agent:** `production`
-
-```bash
-trivy image --exit-code 1 --severity CRITICAL \
-  --output trivy-reports/trivy-report-${BUILD_NUMBER}.txt \
-  harbor.registry.local/java_app/taskmanager:V_${BUILD_NUMBER}
+#### **Stage 5: Upload Artifact to Nexus**
+```groovy
+Agent: None (uses default Jenkins executor)
+Repository: Nexus (192.168.56.6:8081)
+Purpose: Version and store artifacts in artifact repository
 ```
+**Activities:**
+- Authenticates with Nexus using stored credentials
+- Uploads WAR file to `Javaapp_TM` repository
+- Tags artifact with build ID and timestamp
+- Enables version tracking and rollback capability
 
-**Security Checks:**
-- CVE database scanning
-- OS package vulnerabilities
-- Application dependency vulnerabilities
-- Critical severity threshold enforcement
-
-**Outputs:**
-- Text report: `trivy-reports/trivy-report-${BUILD_NUMBER}.txt`
-- HTML report: `trivy-reports/trivy-report-${BUILD_NUMBER}.html`
-
-**Pipeline Behavior:**
-- ❌ Fails on CRITICAL vulnerabilities
-- ✅ Proceeds if no critical issues found
+**Benefits:**
+- Centralized artifact storage
+- Version history maintenance
+- Easy rollback to previous versions
+- Artifact promotion across environments
 
 ---
 
-#### Stage 6: Push to Harbor Registry
-**Agent:** `production`
-
-```bash
-docker push harbor.registry.local/java_app/taskmanager:V_${BUILD_NUMBER}
+#### **Stage 6: Build Docker Image**
+```groovy
+Agent: None (uses default Jenkins executor)
+Purpose: Containerize application
 ```
+**Activities:**
+- Builds Docker image from Dockerfile
+- Uses `--no-cache` flag for clean builds
+- Tags image as `harbor.registry.local/java_app/taskmanager:V_${BUILD_NUMBER}`
+- Includes Tomcat base image
+- Copies WAR file to Tomcat webapps directory
+- Configures environment variables
+
+**Tagging Strategy:**
+- Format: `harbor.registry.local/java_app/taskmanager:V_${BUILD_NUMBER}`
+- Example: `harbor.registry.local/java_app/taskmanager:V_42`
+- Each build gets unique, sequential version tag
+
+---
+
+#### **Stage 7: Security Scanning with Trivy**
+```groovy
+Agent: None (uses default Jenkins executor)
+Tool: Trivy Image Scanner
+Purpose: Vulnerability assessment and security compliance
+```
+**Activities:**
+- Scans Docker image for vulnerabilities
+- Analyzes OS packages and application dependencies
+- Generates HTML security report
+- Exits with code 1 if CRITICAL vulnerabilities found
+
+**Scan Configuration:**
+- Severity Level: `CRITICAL`
+- Output Format: `HTML` (using template)
+- Report Location: `trivy-reports/trivy-report-${BUILD_NUMBER}.html`
+- Exit Code: `1` (fails pipeline on critical issues)
+
+**Report Management:**
+- Archives all Trivy reports in Jenkins
+- Implements automatic cleanup (retains only latest 3 reports)
+- Reports accessible via Jenkins build artifacts
+
+#### **Stage 8: Push Image to Harbor Registry**
+```groovy
+Agent: production (Production VM node)
+Registry: Harbor (harbor.registry.local)
+Purpose: Publish verified image to private container registry
+```
+**Activities:**
+- Authenticates with Harbor using credentials   
+- Pushes image to private registry
+- Makes image available for deployment
+- Verifies successful upload
 
 **Registry Details:**
-- **URL:** https://harbor.registry.local
-- **Project:** java_app
-- **Repository:** taskmanager
-- **Tag Format:** V_${BUILD_NUMBER}
+- Credentials ID: `Harborregistrycredentials`
+- Registry URL: `https://harbor.registry.local`
+- Image Repository: `java_app/taskmanager`
+- Tag: `V_${BUILD_NUMBER}`
+- Full Image Path: `harbor.registry.local/java_app/taskmanager:V_${BUILD_NUMBER}`
 
 ---
 
-#### Stage 7: Deploy via Ansible
-**Agent:** `master` (Jenkins Master)
-
-**SSH Connection to Ansible VM:**
-```bash
-ssh -i "${ANSIBLE_KEY}" ${SSH_USERNAME}@192.168.56.210
+#### **Stage 9: Deploy via Ansible Node**
+```groovy
+Agent: master (Jenkins master node)
+Target: Ansible VM (192.168.56.210)
+Purpose: deployment node
 ```
 
-**Remote Execution Steps:**
+**SSH Connection:**
+- Uses SSH private key authentication (`ansible-ssh-key`)
+- Connects to Ansible VM at 192.168.56.210
+- Executes remote deployment script
 
-1. **Virtual Environment Activation**
-```bash
-source /home/vagrant/myenv/bin/activate
-```
+**Deployment Steps:**
 
-2. **Directory Preparation**
-```bash
-rm -rf /home/vagrant/{java_app_required_files,java_app_harbor}
-mkdir -p /home/vagrant/java_app_required_files
-```
+1. **Environment Activation:**
+   - Activates Python virtual environment
+   - Ensures Ansible and dependencies are available
 
-3. **Application Files Download**
-```bash
-git clone --single-branch --branch harbor-feature \
-  https://github.com/dipen674/Simple_Java_TM.git java_app_harbor
-cp java_app_harbor/{Dockerfile,docker-compose.yml,init.sql} java_app_required_files/
-```
+2. **Directory Preparation:**
+   - Cleans previous deployment artifacts
+   - Creates fresh working directory
 
-4. **Ansible Configuration Download**
-```bash
-cd /home/vagrant/java_app_required_files
-git clone https://github.com/dipen674/Ansible_configs_project.git
-```
+3. **Application Files Download:**
+   - Clones application repository (docker branch)
+   - Copies essential deployment files
+   - Includes Docker configuration and database schema
 
-5. **Ansible Collection Installation**
-```bash
-ansible-galaxy collection install community.docker
-```
+4. **Ansible Configuration Download:**
+   - Clones Ansible playbook repository
+   - Contains deployment roles and tasks
 
-6. **Playbook Execution**
-```bash
-cd Ansible_configs_project
-ansible-playbook playbook.yaml -e "build_number=${BUILD_NUMBER}"
-```
+5. **Ansible Collection Installation:**
+   - Installs Docker Ansible module
+   - Enables container management capabilities
+
+6. **Playbook Execution:**
+   - Runs deployment playbook
+   - Passes build number as extra variable
+   - Orchestrates deployment on Production VM
+
+**Ansible Playbook Structure:**
+The playbook from [Ansible_configs_project](https://github.com/dipen674/Ansible_configs_project) includes:
+- Environment setup tasks
+- Docker image deployment
+- Container orchestration with Docker Compose
+- Health checks and validation
+- Cleanup of old containers
 
 ---
 
 ### Post-Build Actions
 
-#### Always (Cleanup)
-**Agent:** `production`
-
-```bash
-# System cleanup
-docker system prune -a -f
-
-# Pull current and previous images for rollback capability
-docker pull harbor.registry.local/java_app/taskmanager:V_${BUILD_NUMBER}
-docker pull harbor.registry.local/java_app/taskmanager:V_$((BUILD_NUMBER - 1))
+#### **Always (After Every Build):**
+```groovy
+Runs on: production node
+Purpose: Resource cleanup and image preparation
 ```
+**Activities:**
+- **Docker System Cleanup:**
+  ```bash
+  docker system prune -a -f
+  ```
+  - Removes unused containers, images, networks
+  - Frees disk space on production node
+  - Prevents storage exhaustion
 
-#### Success (Email Notification)
-**Agent:** `master`
+- **Image Preparation:**
+  - Pulls current build image: `V_${BUILD_NUMBER}`
+  - Pulls previous build image: `V_${BUILD_NUMBER - 1}`
+  - Enables quick rollback if needed
+  - Ensures images are locally cached
 
+#### **On Success:**
+```groovy
+Runs on: master node
+Purpose: Success notification
 ```
-To: bhattadeependra05@gmail.com
-Cc: bhattad625@gmail.com
-Bcc: dipakbhatt363@gmail.com
-Subject: BUILD SUCCESS NOTIFICATION
+**Email Notification:**
+- **Recipients:**
+  - To: bhattadeependra05@gmail.com
+  - CC: bhattad625@gmail.com
+  - BCC: dipakbhatt363@gmail.com
+- **Subject:** BUILD SUCCESS NOTIFICATION
+- **Content:** Build number, status, and build URL
+- **Purpose:** Inform team of successful deployment
 
-Hi Team,
-
-Build #123 is successful. Please review the build details at:
-http://jenkins.example.com/job/taskmanager/123/
-
-Regards,  
-DevOps Team
+#### **On Failure:**
+```groovy
+Runs on: master node
+Purpose: Failure notification and troubleshooting
 ```
+**Email Notification:**
+- **Recipients:**
+  - To: bhattadeependra05@gmail.com
+  - CC: dipakbhatt363@gmail.com
+- **Subject:** BUILD FAILED NOTIFICATION
+- **Content:** Build number, failure status, build URL for investigation
+- **Purpose:** Alert team for immediate action
 
-#### Failure (Email Notification)
-**Agent:** `master`
+## 🔒 Security Features
 
-```
-To: bhattadeependra05@gmail.com
-Cc: dipakbhatt363@gmail.com
-Subject: BUILD FAILED NOTIFICATION
+1. **Trivy Vulnerability Scanning:**
+   - Scans every Docker image for CRITICAL vulnerabilities
+   - Generates detailed HTML reports
+   - Pipeline fails on critical security issues
 
-Hi Team,
+2. **SonarQube Code Analysis:**
+   - Static code analysis for security vulnerabilities
+   - Code quality and maintainability checks
+   - Security hotspot detection
 
-Build #123 is unsuccessful.  
-Please go through the following URL and verify the details:  
-http://jenkins.example.com/job/taskmanager/123/
+3. **Artifact Verification:**
+   - All artifacts stored in Nexus with version tracking
+   - Traceable deployment history
+   - Rollback capability to previous versions
 
-Best Regards,  
-DevOps Team
-```
+4. **SSH Key-Based Authentication:**
+   - Secure communication between Jenkins and Ansible VM
+   - No password storage in pipeline code
 
----
 
-## 🔗 Deployment Flow
+## 🔄 Rollback Procedure
 
-### End-to-End Data Flow
+In case of deployment issues:
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│ Step 1: Developer Push                                           │
-│ Developer → GitHub (jenkins/harbor-feature branch)               │
-└────────────────────────┬─────────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────────┐
-│ Step 2: Webhook Trigger                                          │
-│ GitHub Webhook → Jenkins VM (Port 8080)                          │
-└────────────────────────┬─────────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────────┐
-│ Step 3: Build Orchestration                                      │
-│ Jenkins Master → Production VM Agent (label: 'production')       │
-│ - Execute Maven build                                            │
-│ - Build Docker image                                             │
-│ - Run Trivy security scan                                        │
-│ - Push to Harbor registry                                        │
-└────────────────────────┬─────────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────────┐
-│ Step 4: Configuration Management                                 │
-│ Jenkins Master → Ansible VM (192.168.56.210)                     │
-│ SSH Command: ansible-playbook playbook.yaml                      │
-└────────────────────────┬─────────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────────┐
-│ Step 5: Ansible Playbook Execution                               │
-│ Ansible VM → Production VM (Target)                              │
-│ - 01_setup.yaml: Prepare environment                             │
-│ - 02_configs.yaml: Copy configurations                           │
-│ - 03_deploy.yaml: Execute docker-compose                         │
-│ - 04_cleanup.yaml: Remove old containers                         │
-└────────────────────────┬─────────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────────┐
-│ Step 6: Container Orchestration                                  │
-│ Production VM Docker Engine                                      │
-│ ┌──────────────────────────────────────────────────────────┐    │
-│ │ docker-compose.yml                                       │    │
-│ │ ┌────────────────────┐  ┌─────────────────────────┐     │    │
-│ │ │   MySQL Container  │  │  Tomcat Container       │     │    │
-│ │ │   Port: 3306       │◄─┤  Port: 8080             │     │    │
-│ │ │   Volume: db_data  │  │  Image: harbor.../V_123 │     │    │
-│ │ └────────────────────┘  └─────────────────────────┘     │    │
-│ └──────────────────────────────────────────────────────────┘    │
-└────────────────────────┬─────────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────────────────┐
-│ Step 7: Application Ready                                        │
-│ Production VM:8080 ← End Users                                   │
-│ Health Check: http://production-vm:8080/taskmanager/             │
-└──────────────────────────────────────────────────────────────────┘
-```
-## 📊 Monitoring & Alerts
-- For monitoring and alerts i have use prometheus and grafana
+1. Identify the last stable build number from Jenkins
+2. Update docker-compose.yml with previous image version
+3. Run deployment playbook with previous build number:
+   ```bash
+   ansible-playbook playbook.yaml -e "build_number=<previous_build>"
+   ```
 
-### Prometheus Configuration
-- Setup alertmanager to send alerts to the slack channel
-- Configured rules in rules.yml and jobs in prometheus.yml file.
+## 📝 Configuration Files
 
-**Repository Links:**
-- Application: https://github.com/dipen674/Simple_Java_TM
-- Ansible Configs: https://github.com/dipen674/Ansible_configs_project
+### Docker Compose Configuration
+Located in the application repository, defines:
+- MySQL service configuration
+- Application service configuration
+- Network configuration
+- Volume mounts
+- Health checks
 
----
+### Ansible Playbook
+Repository: [Ansible_configs_project](https://github.com/dipen674/Ansible_configs_project)
+- Deployment roles and tasks
+- Environment-specific variables
+- Docker Compose orchestration
+- Health check validations
 
-## 📞 Support
 
-For issues and questions:
-- **GitHub Issues:** [Create an issue](https://github.com/dipen674/Simple_Java_TM/issues)
-- **Email:** bhattadeependra05@gmail.com
 
----
-
-## 🗺️ Roadmap
-
-### Planned Features
-
-- [ ] **v2.0:** Kubernetes deployment
----
-
-## 📚 Additional Resources
-
-### Documentation
-- [Jenkins Pipeline Syntax](https://www.jenkins.io/doc/book/pipeline/syntax/)
-- [Ansible Best Practices](https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html)
-- [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [Trivy Security Scanner](https://aquasecurity.github.io/trivy/)
-
-### Related Projects
-- [Java Servlet Tutorial](https://www.oracle.com/java/technologies/servlet-technology.html)
-- [Apache Tomcat Documentation](https://tomcat.apache.org/tomcat-9.0-doc/)
-- [MySQL Documentation](https://dev.mysql.com/doc/)
-
----
-
-## 🎯 Key Takeaways
-
-This project demonstrates:
-
-✅ **Enterprise CI/CD:** Multi-stage Jenkins pipeline with quality gates  
-✅ **Infrastructure as Code:** Ansible-based configuration management  
-✅ **Security First:** Trivy scanning and Harbor registry integration  
-✅ **Scalable Architecture:** Containerized microservices approach  
-✅ **Monitoring:** Prometheus and Alertmanager integration  
-✅ **Best Practices:** Clean separation of concerns across VMs  
-
-To see whether the users are being registered or not for troubleshooting
-
-```
-docker exec -it deploy_app-db-1 mysql -u taskuser -ptaskpass taskmanager -e "SELECT * FROM users;"
-```
-
----
-
-**Last Updated:** October 15, 2025  
-**Version:** 4.0  
-**Status:** Production Ready ✅
+**Note**: This application uses fully automated CI/CD deployment. Ensure proper VM configuration, network connectivity, and credential management across all infrastructure components.
