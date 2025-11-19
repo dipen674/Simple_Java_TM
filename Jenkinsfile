@@ -164,7 +164,7 @@ pipeline {
                         
                         echo "=== Downloading Ansible Configurations ==="
                         cd /home/vagrant/java_app_required_files
-                        git clone --single-branch -branch docker https://github.com/dipen674/Ansible_configs_project/
+                        git clone --single-branch --branch docker https://github.com/dipen674/Ansible_configs_project/
                         
                         echo "=== Running Ansible Deployment ==="
                         ansible-galaxy collection install community.docker
